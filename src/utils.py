@@ -16,17 +16,18 @@ def mkdir_recursive(path):
     os.mkdir(path)
 
 def loaddata(input_size, feature):
+    ws = os.path.dirname(__file__)
     import deepdish.io as ddio
-    mkdir_recursive('dataset')
-    trainData = ddio.load('dataset/train.hdf5')
-    testlabelData= ddio.load('dataset/trainlabel.hdf5')
+    mkdir_recursive(os.path.join(ws, 'dataset'))
+    trainData = ddio.load(os.path.join(ws, 'dataset/train.hdf5'))
+    testlabelData= ddio.load(os.path.join(ws, 'dataset/trainlabel.hdf5'))
     X = np.float32(trainData[feature])
     y = np.float32(testlabelData[feature])
     att = np.concatenate((X,y), axis=1)
     np.random.shuffle(att)
     X , y = att[:,:input_size], att[:, input_size:]
-    valData = ddio.load('dataset/test.hdf5')
-    vallabelData= ddio.load('dataset/testlabel.hdf5')
+    valData = ddio.load(os.path.join(ws, 'dataset/test.hdf5'))
+    vallabelData= ddio.load(os.path.join(ws, 'dataset/testlabel.hdf5'))
     Xval = np.float32(valData[feature])
     yval = np.float32(vallabelData[feature])
     return (X, y, Xval, yval)
@@ -172,20 +173,22 @@ def print_results(config, model, Xval, yval, classes):
     PR_ROC_curves(ytrue, ypred, classes, ypred_mat)
 
 def add_noise(config):
+    workspace = os.path.dirname(__file__)
     noises = dict()
     noises["trainset"] = list()
     noises["testset"] = list() 
     import csv
     try:
-        testlabel = list(csv.reader(open('training2017/REFERENCE.csv')))
+        testlabel = list(csv.reader(open(os.path.join(workspace, 'training2017/REFERENCE.csv'))))
     except:
         cmd = "curl -O https://archive.physionet.org/challenge/2017/training2017.zip"
         os.system(cmd)
         os.system("unzip training2017.zip")
-        testlabel = list(csv.reader(open('training2017/REFERENCE.csv')))
+        testlabel = list(csv.reader(open(os.path.join(workspace, 'training2017/REFERENCE.csv'))))
     for i, label in enumerate(testlabel):
       if label[1] == '~':
         filename = 'training2017/'+ label[0] + '.mat'
+        filename = os.path.join(workspace, filename)
         from scipy.io import loadmat
         noise = loadmat(filename)
         noise = noise['val']

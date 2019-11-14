@@ -8,6 +8,7 @@ from utils import *
 import os 
 
 def cincData(config):
+    workspace = os.path.dirname(__file__)
     if config.cinc_download:
       cmd = "curl -O https://archive.physionet.org/challenge/2017/training2017.zip"
       os.system(cmd)
@@ -16,7 +17,7 @@ def cincData(config):
     import csv
     testlabel = []
 
-    with open('training2017/REFERENCE.csv') as csv_file:
+    with open(os.path.join(workspace, 'training2017/REFERENCE.csv')) as csv_file:
       csv_reader = csv.reader(csv_file, delimiter=',')
       line_count = 0
       for row in csv_reader:
@@ -29,6 +30,7 @@ def cincData(config):
       num = np.random.randint(1,high)
     filename , label = testlabel[num-1]
     filename = 'training2017/'+ filename + '.mat'
+    filename = os.path.join(workspace, filename)
     from scipy.io import loadmat
     data = loadmat(filename)
     print("The record of "+ filename)
@@ -54,12 +56,13 @@ def predict(data, label, peaks, config):
       return predicted, classesM[avgPredict.argmax()], 100*max(avgPredict[0])
 
 def predictByPart(data, peaks):
+    workspace = os.path.dirname(__file__)
     classesM = ['N','Ventricular','Paced','A','F','Noise']#,'L','R','f','j','E','a','J','Q','e','S']
     predicted = list()
     result = ""
     counter = [0]* len(classesM)
     from keras.models import load_model
-    model = load_model('models/MLII-latest.hdf5')
+    model = load_model(os.path.join(workspace, 'models/MLII-latest.hdf5'))
     config = get_config() 
     for i, peak in enumerate(peaks[3:-1]):
       total_n =len(peaks)
@@ -75,8 +78,10 @@ def predictByPart(data, peaks):
       if classesM[ann] != 'N' and prob[0,ann] > 0.95:
         import matplotlib.pyplot as plt
         plt.plot(data[:, start:end][0,:,0],)
-        mkdir_recursive('results')
-        plt.savefig('results/hazard-'+classesM[ann]+'.png', format="png", dpi = 300)
+        mkdir_recursive(os.path.join(workspace, 'results'))
+        png_path = 'results/hazard-'+classesM[ann]+'.png'
+        png_path = os.path.join(workspace, png_path)
+        plt.savefig(png_path, format="png", dpi = 300)
         plt.close()
     result += "{}-N, {}-Venticular, {}-Paced, {}-A, {}-F, {}-Noise".format(counter[0], counter[1], counter[2], counter[3], counter[4], counter[5])
     return predicted, result

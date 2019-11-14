@@ -36,9 +36,13 @@ import random
 from utils import *
 from config import get_config
 
+workspace_folder = os.path.dirname(__file__)
+
 def preprocess( split ):
-    nums = ['100','101','102','103','104','105','106','107','108','109','111','112','113','114','115','116','117','118','119','121','122','123','124','200','201','202','203','205','207','208','209','210','212','213','214','215','217','219','220','221','222','223','228','230','231','232','233','234']
+    # comment 104 for error data
+    nums = ['100','101','102','103','105','106','107','108','109','111','112','113','114','115','116','117','118','119','121','122','123','124','200','201','202','203','205','207','208','209','210','212','213','214','215','217','219','220','221','222','223','228','230','231','232','233','234']
     features = ['MLII', 'V1', 'V2', 'V4', 'V5'] 
+    dataset_folder = os.path.join(workspace_folder, 'dataset')
 
     if split :
         testset = ['101', '105','114','118', '124', '201', '210' , '217']
@@ -57,10 +61,11 @@ def preprocess( split ):
           input_size = config.input_size 
           for num in tqdm(dataSet):
             from wfdb import rdrecord, rdann
-            record = rdrecord('dataset/'+ num, smooth_frames= True)
+            record = rdrecord(os.path.join(dataset_folder, num), smooth_frames= True)
             from sklearn import preprocessing
             signals0 = preprocessing.scale(np.nan_to_num(record.p_signal[:,0])).tolist()
             signals1 = preprocessing.scale(np.nan_to_num(record.p_signal[:,1])).tolist()
+
             from scipy.signal import find_peaks
             peaks, _ = find_peaks(signals0, distance=150)
 
@@ -72,9 +77,11 @@ def preprocess( split ):
             dappend0 = datadict[feature0].append
             dappend1 = datadict[feature1].append
             # skip a first peak to have enough range of the sample 
+
+
             for peak in tqdm(peaks[1:-1]):
               start, end =  peak-input_size//2 , peak+input_size//2
-              ann = rdann('dataset/'+ num, extension='atr', sampfrom = start, sampto = end, return_label_elements=['symbol'])
+              ann = rdann(os.path.join(dataset_folder , num), extension='atr', sampfrom = start, sampto = end, return_label_elements=['symbol'])
               
               def to_dict(chosenSym):
                 y = [0]*Nclass
@@ -110,10 +117,10 @@ def preprocess( split ):
         dd.io.save(labelsname, datalabel)
 
     if split:
-        dataSaver(trainset, 'dataset/train.hdf5', 'dataset/trainlabel.hdf5')
-        dataSaver(testset, 'dataset/test.hdf5', 'dataset/testlabel.hdf5')
+        dataSaver(trainset, os.path.join(workspace_folder, 'dataset/train.hdf5'), os.path.join(workspace_folder, 'dataset/trainlabel.hdf5'))
+        dataSaver(testset, os.path.join(workspace_folder, 'dataset/test.hdf5'), os.path.join(workspace_folder, 'dataset/testlabel.hdf5'))
     else:
-        dataSaver(nums, 'dataset/targetdata.hdf5', 'dataset/labeldata.hdf5')
+        dataSaver(nums, os.path.join(workspace_folder, 'dataset/targetdata.hdf5'), os.path.join(workspace_folder, 'dataset/labeldata.hdf5'))
 
 def main(config):
     def Downloadmitdb():
@@ -127,7 +134,11 @@ def main(config):
                 cmd = "cd dataset && curl -O "+url
                 os.system(cmd)
 
-    if config.downloading:
+    parent_folder = os.path.dirname(__file__)
+    sample_data_path = os.path.join(os.path.dirname(__file__), "dataset/234.hea")
+    is_ds_exist = os.path.exists(sample_data_path)
+
+    if config.downloading and not is_ds_exist:
         Downloadmitdb()
     return preprocess(config.split)
 
