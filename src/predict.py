@@ -7,6 +7,10 @@ from config import get_config
 from utils import *
 import os 
 
+
+#import os
+#os.environ["CUDA_VISIBLE_DEVICES"]="-1"  
+
 def cincData(config):
     workspace = os.path.dirname(__file__)
     if config.cinc_download:
@@ -84,6 +88,7 @@ def predictByPart(data, peaks):
         plt.savefig(png_path, format="png", dpi = 300)
         plt.close()
     result += "{}-N, {}-Venticular, {}-Paced, {}-A, {}-F, {}-Noise".format(counter[0], counter[1], counter[2], counter[3], counter[4], counter[5])
+    print(result)
     return predicted, result
 
 def main(config):

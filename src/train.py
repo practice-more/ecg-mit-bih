@@ -7,6 +7,10 @@ from graph import ECG_model
 from config import get_config
 from utils import *
 
+
+#import os
+#os.environ["CUDA_VISIBLE_DEVICES"]="-1"  
+
 def train(config, X, y, Xval=None, yval=None):
     
     classes = ['N','V','/','A','F','~']#,'L','R',f','j','E','a']#,'J','Q','e','S']
@@ -21,20 +25,22 @@ def train(config, X, y, Xval=None, yval=None):
         (mvl, nvl) = yval.shape
         yval = yval.reshape((mvl, 1, nvl))
 
+    workspace = os.path.dirname(__file__)
+
     if config.checkpoint_path is not None:
-        model = model.load_model(config.checkpoint_path)
+        model = model.load_model(os.path.join(workspace, config.checkpoint_path))
         initial_epoch = config.resume_epoch # put the resuming epoch
     else:
         model = ECG_model(config)
         initial_epoch = 0
 
-    mkdir_recursive('models')
+    mkdir_recursive(os.path.join(workspace, 'models'))
     #lr_decay_callback = LearningRateSchedulerPerBatch(lambda epoch: 0.1)
     callbacks = [
             EarlyStopping(patience = config.patience, verbose=1),
-            ReduceLROnPlateau(factor = 0.5, patience = 3, min_lr = 0.01, verbose=1),
-            TensorBoard( log_dir='./logs', histogram_freq=0, write_graph = True, write_grads=False, write_images=True),
-            ModelCheckpoint('models/{}-latest.hdf5'.format(config.feature), monitor='val_loss', save_best_only=False, verbose=1, period=10)
+            #ReduceLROnPlateau(factor = 0.5, patience = 3, min_lr = 0.01, verbose=1),
+            TensorBoard( log_dir=os.path.join(workspace, 'logs'), histogram_freq=0, write_graph = True, write_grads=False, write_images=True),
+            ModelCheckpoint(os.path.join(workspace, 'models/{}-latest.hdf5'.format(config.feature)), monitor='val_loss', save_best_only=False, verbose=1, period=10)
             # , lr_decay_callback
     ]
 

@@ -118,3 +118,12 @@ https://github.com/awni/ecg
 
 also noticable 
 https://github.com/fernandoandreotti/cinc-challenge2017/tree/master/deeplearn-approach
+
+## Note
+
+The code in tf 1.X might work well, but in tf 2.0, it will raise None value not support error. It might happen in the optimter part. Some value will be none in the process.
+To solve this problem, we can use `from tensorflow.keras.optimizers import Adam` instead of `from keras.optimizers import Adam`, but the opt in tf not support lr reduce, so ReduceLROnPlateau in the callback is not supported. or it will raise lr not found error. we can comment this just to see some result.
+
+
+
+   
