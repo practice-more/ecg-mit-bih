@@ -181,9 +181,10 @@ def add_noise(config):
     try:
         testlabel = list(csv.reader(open(os.path.join(workspace, 'training2017/REFERENCE.csv'))))
     except:
-        cmd = "curl -O https://archive.physionet.org/challenge/2017/training2017.zip"
+
+        cmd = "cd {} && curl -O https://archive.physionet.org/challenge/2017/training2017.zip".format(workspace)
         os.system(cmd)
-        os.system("unzip training2017.zip")
+        os.system("cd {} && unzip training2017.zip".format(workspace))
         testlabel = list(csv.reader(open(os.path.join(workspace, 'training2017/REFERENCE.csv'))))
     for i, label in enumerate(testlabel):
       if label[1] == '~':
