@@ -17,17 +17,29 @@ def mkdir_recursive(path):
 
 def loaddata(input_size, feature):
     ws = os.path.dirname(__file__)
-    import deepdish.io as ddio
+    #import deepdish.io as ddio
     mkdir_recursive(os.path.join(ws, 'dataset'))
-    trainData = ddio.load(os.path.join(ws, 'dataset/train.hdf5'))
-    testlabelData= ddio.load(os.path.join(ws, 'dataset/trainlabel.hdf5'))
+
+    print("traindata: " +os.path.join(ws, 'dataset/train.hdf5'))
+    print("testlabelData: " + os.path.join(ws, 'dataset/trainlabel.hdf5'))
+
+    #trainData = ddio.load(os.path.join(ws, 'dataset/train.hdf5'))
+    #testlabelData= ddio.load(os.path.join(ws, 'dataset/trainlabel.hdf5'))
+    import h5py
+    trainData = h5py.File(os.path.join(ws, 'dataset/train.hdf5'), 'r')
+    testlabelData = h5py.File(os.path.join(ws, 'dataset/trainlabel.hdf5'), 'r')
+
+
+
     X = np.float32(trainData[feature])
     y = np.float32(testlabelData[feature])
     att = np.concatenate((X,y), axis=1)
     np.random.shuffle(att)
     X , y = att[:,:input_size], att[:, input_size:]
-    valData = ddio.load(os.path.join(ws, 'dataset/test.hdf5'))
-    vallabelData= ddio.load(os.path.join(ws, 'dataset/testlabel.hdf5'))
+    #valData = ddio.load(os.path.join(ws, 'dataset/test.hdf5'))
+    valData = h5py.File(os.path.join(ws, 'dataset/test.hdf5'), 'r')
+    vallabelData = h5py.File(os.path.join(ws, 'dataset/testlabel.hdf5'), 'r')
+    #vallabelData= ddio.load(os.path.join(ws, 'dataset/testlabel.hdf5'))
     Xval = np.float32(valData[feature])
     yval = np.float32(vallabelData[feature])
     return (X, y, Xval, yval)
@@ -150,14 +162,17 @@ def PR_ROC_curves(ytrue, ypred, classes, ypred_mat):
     plt.close()
 
 def print_results(config, model, Xval, yval, classes):
+
+    workspace = os.path.dirname(__file__)
+
     model2 = model
     if config.trained_model:
         model.load_weights(config.trained_model)
     else:    
-        model.load_weights('models/{}-latest.hdf5'.format(config.feature))
+        model.load_weights(workspace + '/models/{}-latest.hdf5'.format(config.feature))
     # to combine different trained models. On testing  
     if config.ensemble:
-        model2.load_weight('models/weights-V1.hdf5')
+        model2.load_weight(workspace + 'models/weights-V1.hdf5')
         ypred_mat = (model.predict(Xval) + model2.predict(Xval))/2
     else:
         ypred_mat = model.predict(Xval)  

@@ -38,7 +38,7 @@ def train(config, X, y, Xval=None, yval=None):
     #lr_decay_callback = LearningRateSchedulerPerBatch(lambda epoch: 0.1)
     callbacks = [
             EarlyStopping(patience = config.patience, verbose=1),
-            #ReduceLROnPlateau(factor = 0.5, patience = 3, min_lr = 0.01, verbose=1),
+            ReduceLROnPlateau(factor = 0.5, patience = 3, min_lr = 0.01, verbose=1),
             TensorBoard( log_dir=os.path.join(workspace, 'logs'), histogram_freq=0, write_graph = True, write_grads=False, write_images=True),
             ModelCheckpoint(os.path.join(workspace, 'models/{}-latest.hdf5'.format(config.feature)), monitor='val_loss', save_best_only=False, verbose=1, period=10)
             # , lr_decay_callback
